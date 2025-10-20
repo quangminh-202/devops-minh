@@ -32,11 +32,13 @@ jobs:
 
       - name: Run all tests
         run: |
+          cd catty-reminders-app
           echo "Running all test suites..."
           python3 -m pytest -v --browser chromium tests || exit 1
 
       - name: Run individual test types (for clarity)
         run: |
+          cd catty-reminders-app
           echo "Running Unit Tests"
           python3 -m pytest -v tests/test_unit.py || echo "Unit tests failed"
           echo "Running API Tests"

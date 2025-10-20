@@ -1,0 +1,6 @@
+{
+  "DEBUG": true,
+  "SECRET_KEY": "dev",
+  "SQLALCHEMY_DATABASE_URI": "sqlite:///reminders.db",
+  "SQLALCHEMY_TRACK_MODIFICATIONS": false
+}

@@ -23,8 +23,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          cd catty-reminders-app 
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install pytest pytest-playwright
+          pip install pytest pytest-playwright fastapi uvicorn jinja2
 
       - name: Install browsers (for UI tests)
         run: |

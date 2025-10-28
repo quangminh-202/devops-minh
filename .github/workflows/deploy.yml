@@ -33,6 +33,9 @@ jobs:
             docker pull "$IMAGE"
             echo "Stopping old container (if exists)"
             docker rm -f catty-reminders || true
+            echo "Stopping any process using port 8181"
+            pkill -f "uvicorn.*8181" || true
+            sleep 2
             echo "Starting new container"
             docker run -d \
               --name catty-reminders \

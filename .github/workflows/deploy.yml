@@ -1,8 +1,10 @@
-name: CD - Deploy FastAPI App
+name: CD - Deploy via Docker
 
 on:
-  release:
-    types: [published] 
+  push:
+    branches:
+      - main
+      - docker
 
 jobs:
   deploy:
@@ -12,16 +14,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy app to remote server
+      - name: Deploy Docker container on remote host
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{secrets.SSH_HOST}}
           port: 2468
           username: ${{secrets.SSH_USER}}
-          key: ${{secrets.SSH_PRIVATE_KEY}} 
+          key: ${{secrets.SSH_PRIVATE_KEY}}
           script: |
-            cd ~/catty-reminders-app
-            git pull origin github-action
-            source venv/bin/activate || python3 -m venv venv && source venv/bin/activate
-            pip install -r requirements.txt
-            nohup uvicorn app.main:app --host 0.0.0.0 --port 8181 --reload &
+            set -e
+            echo "Logging in to GHCR..."
+            echo "${{secrets.CR_PAT}}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            IMAGE="ghcr.io/${{ github.repository }}:latest"
+            echo "Pulling $IMAGE"
+            docker pull "$IMAGE"
+            echo "Stopping old container (if exists)"
+            docker rm -f catty-reminders || true
+            echo "Starting new container"
+            docker run -d \
+              --name catty-reminders \
+              --restart unless-stopped \
+              -p 8181:8181 \
+              -e PYTHONUNBUFFERED=1 \
+              "$IMAGE"
+            echo "Waiting for app to be healthy..."
+            for i in $(seq 1 30); do
+              if curl -fsS http://localhost:8181/ > /dev/null 2>&1; then
+                echo "App is up"; exit 0
+              fi
+              sleep 2
+            done
+            echo "App did not become healthy in time"; docker logs --tail 200 catty-reminders; exit 1

@@ -9,9 +9,9 @@ services:
     ports:
       - "8182:8181"
     volumes:
-      # Mount thư mục code để có thể edit code và reload (development mode)
+      # Mount code directory for live editing and reload (development mode)
       - ./catty-reminders-app:/app
-      # Volume riêng cho database để persist data
+      # Separate volume for database to persist data
       - catty-data:/app/data
     environment:
       - PYTHONUNBUFFERED=1
@@ -19,7 +19,7 @@ services:
     networks:
       - catty-network
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8181')"]
+      test: ["CMD", "python", "- <<'PY'\nimport sys\nfrom urllib.request import urlopen\ntry:\n    with urlopen('http://localhost:8181', timeout=5) as r:\n        sys.exit(0 if 200 <= r.status < 400 else 1)\nexcept Exception:\n    sys.exit(1)\nPY"]
       interval: 30s
       timeout: 10s
       retries: 3

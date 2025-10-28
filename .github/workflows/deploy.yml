@@ -22,8 +22,8 @@ jobs:
           username: ${{secrets.SSH_USER}}
           key: ${{secrets.SSH_PRIVATE_KEY}}
           debug: true
-          timeout: 120s
-          command_timeout: 300s
+          timeout: 300s
+          command_timeout: 900s
           script: |
             set -e
             echo "Logging in to GHCR..."
@@ -35,7 +35,10 @@ jobs:
             docker rm -f catty-reminders || true
             echo "Stopping any process using port 8181"
             pkill -f "uvicorn.*8181" || true
-            sleep 2
+            echo "Waiting for port to be free"
+            sleep 3
+            echo "Checking if port 8181 is free"
+            ss -tlnp | grep :8181 || echo "Port 8181 is free"
             echo "Starting new container"
             docker run -d \
               --name catty-reminders \

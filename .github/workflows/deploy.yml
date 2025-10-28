@@ -22,6 +22,7 @@ jobs:
           username: ${{secrets.SSH_USER}}
           key: ${{secrets.SSH_PRIVATE_KEY}}
           debug: true
+          timeout: 60s
           script: |
             set -e
             echo "Logging in to GHCR..."

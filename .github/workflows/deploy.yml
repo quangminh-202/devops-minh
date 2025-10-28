@@ -33,12 +33,18 @@ jobs:
             docker pull "$IMAGE"
             echo "Stopping old container (if exists)"
             docker rm -f catty-reminders || true
-            echo "Stopping any process using port 8181"
-            pkill -f "uvicorn.*8181" || true
-            echo "Waiting for port to be free"
-            sleep 3
-            echo "Checking if port 8181 is free"
-            ss -tlnp | grep :8181 || echo "Port 8181 is free"
+            echo "Checking port 8181 usage"
+            if ss -tlnp | grep :8181; then
+              echo "Port 8181 is in use, finding process..."
+              PID=$(ss -tlnp | grep :8181 | awk '{print $6}' | cut -d',' -f2 | cut -d'=' -f2)
+              if [ ! -z "$PID" ]; then
+                echo "Killing process $PID"
+                kill $PID || true
+                sleep 2
+              fi
+            else
+              echo "Port 8181 is free"
+            fi
             echo "Starting new container"
             docker run -d \
               --name catty-reminders \

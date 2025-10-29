@@ -25,6 +25,7 @@ jobs:
           timeout: 300s
           command_timeout: 900s
           sync: true
+          script_stop: false
           script: |
             echo "Logging in to GHCR..."
             echo "${{secrets.CR_PAT}}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin

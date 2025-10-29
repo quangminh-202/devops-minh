@@ -25,48 +25,47 @@ jobs:
           timeout: 300s
           command_timeout: 900s
           script: |
-            bash -c '
-              set -e
-              echo "Logging in to GHCR..."
-              echo "${{secrets.CR_PAT}}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-              IMAGE="ghcr.io/${{ github.repository }}:latest"
-              echo "Pulling $IMAGE"
-              docker pull "$IMAGE"
-              echo "Stopping old container (if exists)"
-              docker rm -f catty-reminders || true
-              
-              echo "Checking port 8181 usage"
-              if ss -tlnp | grep :8181; then
-                echo "Port 8181 is in use, finding process..."
-                PID=$(ss -tlnp | grep :8181 | awk '{print $6}' | cut -d',' -f2 | cut -d'=' -f2)
-                if [ ! -z "$PID" ]; then
-                  echo "Killing process $PID"
-                  kill $PID || true
-                  sleep 2
-                fi
-              else
-                echo "Port 8181 is free"
-              fi
-              
-              echo "Starting new container"
-              docker run -d \
-                --name catty-reminders \
-                --restart unless-stopped \
-                -p 8181:8181 \
-                -e PYTHONUNBUFFERED=1 \
-                "$IMAGE"
-              
-              echo "Waiting for app to be healthy..."
-              for i in $(seq 1 30); do
-                if curl -fsS http://localhost:8181/ > /dev/null 2>&1; then
-                  echo "App is up"; 
-                  exit 0
-                fi
+            set -e
+            echo "Logging in to GHCR..."
+            echo "${{secrets.CR_PAT}}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            IMAGE="ghcr.io/${{ github.repository }}:latest"
+            echo "Pulling $IMAGE"
+            docker pull "$IMAGE"
+            echo "Stopping old container (if exists)"
+            docker rm -f catty-reminders || true
+            
+            echo "Checking port 8181 usage"
+            if ss -tlnp | grep :8181; then
+              echo "Port 8181 is in use, finding process..."
+              PID=$(ss -tlnp | grep :8181 | awk '{print $6}' | cut -d',' -f2 | cut -d'=' -f2)
+              if [ ! -z "$PID" ]; then
+                echo "Killing process $PID"
+                kill $PID || true
                 sleep 2
-              done
-              
-              echo "App did not become healthy in time"; 
-              docker logs --tail 200 catty-reminders || true
-              echo "Deployment finished (possibly with warnings)"
-              exit 0
-            '
+              fi
+            else
+              echo "Port 8181 is free"
+            fi
+            
+            echo "Starting new container"
+            docker run -d \
+              --name catty-reminders \
+              --restart unless-stopped \
+              -p 8181:8181 \
+              -e PYTHONUNBUFFERED=1 \
+              "$IMAGE"
+            
+            echo "Waiting for app to be healthy..."
+            for i in $(seq 1 30); do
+              if curl -fsS http://localhost:8181/ > /dev/null 2>&1; then
+                echo "App is up"; 
+                exit 0
+              fi
+              sleep 2
+            done
+
+            echo "App did not become healthy in time"; 
+            docker logs --tail 200 catty-reminders || true
+            echo "Deployment finished (possibly with warnings)"
+            sleep 2
+            exit 0

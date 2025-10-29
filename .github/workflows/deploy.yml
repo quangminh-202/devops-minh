@@ -24,6 +24,7 @@ jobs:
           debug: true
           timeout: 300s
           command_timeout: 900s
+          sync: true
           script: |
             set -e
             echo "Logging in to GHCR..."

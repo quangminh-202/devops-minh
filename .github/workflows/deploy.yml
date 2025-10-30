@@ -21,7 +21,7 @@ jobs:
           username: ${{secrets.SSH_USER}}
           key: ${{secrets.SSH_PRIVATE_KEY}} 
           script: |
-            cd ~/catty-reminders-app
+            cd ~/devops-minh
             git pull origin github-action
             source venv/bin/activate || python3 -m venv venv && source venv/bin/activate
             pip install -r requirements.txt

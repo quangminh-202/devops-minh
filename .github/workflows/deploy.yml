@@ -25,5 +25,5 @@ jobs:
             git pull origin github-action
             source venv/bin/activate || python3 -m venv venv && source venv/bin/activate
             pip install -r requirements.txt
-            pkill -f "uvicorn app.main:app" ||true
+            sudo pkill -f "uvicorn app.main:app" || true
             nohup uvicorn app.main:app --host 0.0.0.0 --port 8181 --reload &

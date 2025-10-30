@@ -2,7 +2,8 @@ name: CD - Deploy FastAPI App
 
 on:
   release:
-    types: [published] 
+    types: 
+      - published
 
 jobs:
   deploy:

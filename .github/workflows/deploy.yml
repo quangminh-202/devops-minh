@@ -22,16 +22,18 @@ jobs:
           username: ${{secrets.SSH_USER}}
           key: ${{secrets.SSH_PRIVATE_KEY}}
           debug: true
-          timeout: 300s
-          command_timeout: 900s
+          timeout: 600s
+          command_timeout: 1800s
           sync: true
           script_stop: false
           script: |
             echo "Logging in to GHCR..."
             echo "${{secrets.CR_PAT}}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             IMAGE="ghcr.io/${{ github.repository }}:latest"
+            
             echo "Pulling $IMAGE"
             docker pull "$IMAGE"
+            
             echo "Stopping old container (if exists)"
             docker rm -f catty-reminders || true
             
@@ -67,6 +69,7 @@ jobs:
 
             echo "App did not become healthy in time"; 
             docker logs --tail 200 catty-reminders || true
+            
             echo "Deployment finished (possibly with warnings)"
             sleep 2
             exit 0

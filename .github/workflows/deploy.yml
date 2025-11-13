@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - docker
+      - docker-compose
 
 jobs:
   deploy:
@@ -27,49 +28,35 @@ jobs:
           sync: true
           script_stop: false
           script: |
-            echo "Logging in to GHCR..."
-            echo "${{secrets.CR_PAT}}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-            IMAGE="ghcr.io/${{ github.repository }}:latest"
-            
-            echo "Pulling $IMAGE"
-            docker pull "$IMAGE"
-            
-            echo "Stopping old container (if exists)"
-            docker rm -f catty-reminders || true
-            
-            echo "Checking port 8181 usage"
-            if ss -tlnp | grep :8181; then
-              echo "Port 8181 is in use, finding process..."
-              PID=$(ss -tlnp | grep :8181 | awk '{print $6}' | cut -d',' -f2 | cut -d'=' -f2)
-              if [ ! -z "$PID" ]; then
-                echo "Killing process $PID"
-                kill $PID || true
-                sleep 2
-              fi
-            else
-              echo "Port 8181 is free"
-            fi
-            
-            echo "Starting new container"
-            docker run -d \
-              --name catty-reminders \
-              --restart unless-stopped \
-              -p 8181:8181 \
-              -e PYTHONUNBUFFERED=1 \
-              "$IMAGE"
-            
-            echo "Waiting for app to be healthy..."
+            set -e
+
+            echo "==> Go to project folder on server"
+            cd ~/devops-minh
+
+            echo "==> Pull latest code from branch ${{ github.ref_name }}"
+            git pull origin ${{ github.ref_name }}
+
+            echo "==> Login to GHCR"
+            echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            echo "==> Pull images defined in docker-compose.yml"
+            docker compose pull
+
+            echo "==> Start stack with Docker Compose"
+            # docker compose down || true
+            docker compose up -d --remove-orphans
+
+            echo "==> Check app health on port 8181"
             for i in $(seq 1 30); do
               if curl -fsS http://localhost:8181/ > /dev/null 2>&1; then
-                echo "App is up"; 
+                echo "App is UP"
                 exit 0
               fi
+              echo "Waiting for app... ($i/30)"
               sleep 2
             done
 
-            echo "App did not become healthy in time"; 
-            docker logs --tail 200 catty-reminders || true
-            
-            echo "Deployment finished (possibly with warnings)"
-            sleep 2
-            exit 0
+            echo "App did not become healthy in time"
+            echo "Logs from app service:"
+            docker compose logs app || true
+            exit 1

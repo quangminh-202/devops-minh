@@ -6,6 +6,7 @@ on:
       - main
       - docker
       - github-action
+      - docker-compose
   pull_request:
 
 jobs:

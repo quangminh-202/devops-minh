@@ -2,7 +2,6 @@ name: catty-reminders
 
 services:
   app:
-    # Image đã build và push lên GHCR trong lab 3
     image: ghcr.io/quangminh-202/devops-minh:latest
     container_name: catty-app
     ports:

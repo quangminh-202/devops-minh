@@ -1,0 +1,34 @@
+name: catty-reminders
+
+services:
+  app:
+    # Image đã build và push lên GHCR trong lab 3
+    image: ghcr.io/quangminh-202/devops-minh:latest
+    container_name: catty-app
+    ports:
+      - "8181:8181"
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: catty
+      DB_PASSWORD: cattypass
+      DB_NAME: catty_reminders
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:11
+    container_name: catty-db
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: catty_reminders
+      MARIADB_USER: catty
+      MARIADB_PASSWORD: cattypass
+    volumes:
+      - catty-db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+volumes:
+  catty-db-data:

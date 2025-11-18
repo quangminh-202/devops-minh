@@ -4,14 +4,11 @@ services:
   app:
     image: ghcr.io/quangminh-202/devops-minh:latest
     container_name: catty-app
+    network_mode: "host"
     ports:
       - "8181:8181"
     environment:
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_USER: catty
-      DB_PASSWORD: cattypass
-      DB_NAME: catty_reminders
+      SECRET_KEY: "Cats are awesome!"
     depends_on:
       - db
 
@@ -20,10 +17,8 @@ services:
     container_name: catty-db
     restart: always
     environment:
-      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_ROOT_PASSWORD: mypass
       MARIADB_DATABASE: catty_reminders
-      MARIADB_USER: catty
-      MARIADB_PASSWORD: cattypass
     volumes:
       - catty-db-data:/var/lib/mysql
     ports:

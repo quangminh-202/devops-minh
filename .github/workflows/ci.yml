@@ -46,6 +46,8 @@ jobs:
           python3 -m pytest -v --browser chromium tests || exit 1
 
       - name: Run individual test types (for clarity)
+        if: always()
+        continue-on-error: true
         run: |
           cd catty-reminders-app
           echo "Running Unit Tests"

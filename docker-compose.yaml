@@ -4,24 +4,28 @@ services:
   db:
     image: mariadb:11
     container_name: catty-db
-    restart: always
+    restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: mypass       # trùng password trong config.json
-      MARIADB_ROOT_HOST: '%'             # ❗️ cho phép root từ mọi host
+      MARIADB_ROOT_PASSWORD: mypass
       MARIADB_DATABASE: catty_reminders
     volumes:
-      - catty-db-data:/var/lib/mysql
-    ports:
-      - "3306:3306"
+      - db-data:/var/lib/mysql
 
   app:
     image: ghcr.io/quangminh-202/devops-minh:latest
     container_name: catty-app
-    network_mode: "host"                 # để localhost:3306 trong app là DB trên host
-    environment:
-      SECRET_KEY: "Cats are awesome!"
     depends_on:
       - db
+    restart: unless-stopped
+    ports:
+      - "8181:8181"
+    environment:
+      SECRET_KEY: "Cats are awesome!"
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: catuser
+      DB_PASSWORD: catpass
+      DB_NAME: catty_reminders
 
 volumes:
-  catty-db-data:
+  db-data:
